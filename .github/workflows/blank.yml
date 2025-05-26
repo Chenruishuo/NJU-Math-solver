@@ -1,0 +1,57 @@
+name: LaTeX Build
+
+on:
+  push:
+    branches:
+      - main # 或您的默认分支
+    paths:
+      - '**/*.tex' # 只有当 .tex 文件改变时才触发
+      - '**/*.bib'
+      - '**/*.cls'
+      - '**/*.sty'
+      - '**/*.png'
+      - '**/*.jpg'
+      - '**/*.eps'
+      - '**/*.pdf' # 如果你有一些预编译的图片PDF
+
+jobs:
+  build_latex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # 使用最新的actions/checkout
+
+      - name: Set up TeX Live
+        uses: xu-cheng/latex-action@v2 # 使用一个 LaTeX 编译 Action
+        with:
+          root_file: main.tex # 你的主 .tex 文件名
+          latexmk_options: '-pdf -interaction=nonstopmode -halt-on-error' # 编译选项，确保生成PDF
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4 # 使用最新的actions/upload-artifact
+        with:
+          name: compiled-pdf
+          path: main.pdf # 编译生成的PDF文件名
+          retention-days: 7 # PDF在artifact中保留的天数
+
+      # 可选：如果希望将PDF添加到GitHub Release中
+      # - name: Create Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: v${{ github.run_number }} # 或者使用其他版本号策略
+      #     release_name: Release ${{ github.run_number }}
+      #     draft: false
+      #     prerelease: false
+
+      # - name: Upload Release Asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: main.pdf
+      #     asset_name: YourDocument.pdf
+      #     asset_content_type: application/pdf
